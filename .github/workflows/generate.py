@@ -1,7 +1,7 @@
 import requests
 from PIL import Image, ImageDraw
 
-USERNAME = "YOUR_USERNAME"
+USERNAME = "Samm-05"
 
 def get_data():
     try:
