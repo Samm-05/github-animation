@@ -1,30 +1,36 @@
-name: Update Space Shooter Game
+name: Generate Animation
 
 on:
-  schedule:
-    - cron: '0 0 * * *' # Runs daily at midnight
-  workflow_dispatch: # Allows you to run it manually
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  update-game:
+  build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Generate Space Shooter GIF
-        uses: czl9707/gh-space-shooter@v1
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          # Optional: change 'random' to 'column' or 'row'
-          strategy: 'random' 
-          
-      - name: Commit and Push
+          python-version: "3.10"
+
+      - name: Install libs
+        run: pip install pillow requests
+
+      - name: Run script
+        run: python generate.py
+
+      - name: Debug files
+        run: ls -l
+
+      - name: Commit GIF
         run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add gh-space-shooter.gif
-          git diff --staged --quiet || git commit -m "Update space shooter game"
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add animation.gif || echo "no file"
+          git commit -m "update gif" || echo "no changes"
           git push
