@@ -10,9 +10,15 @@ def get_data():
         url = f"https://github-contributions-api.jogruber.de/v4/{USERNAME}"
         res = requests.get(url, timeout=10)
         data = res.json()
-        return data["contributions"]
-    except:
-        return [[[{"count": 1} for _ in range(7)] for _ in range(20)]][0]
+
+        if "contributions" in data:
+            return data["contributions"]
+
+    except Exception as e:
+        print("API Error:", e)
+
+    # fallback dummy grid
+    return [[{"count": 1} for _ in range(7)] for _ in range(30)]
 
 weeks = get_data()
 
@@ -23,11 +29,9 @@ CELL = 12
 
 frames = []
 
-# Player position
 player_x = WIDTH // 2
 player_y = HEIGHT - 30
 
-# Bullets
 bullets = []
 
 # -------- ANIMATION --------
@@ -35,41 +39,54 @@ for step in range(40):
     img = Image.new("RGB", (WIDTH, HEIGHT), (5, 10, 20))
     draw = ImageDraw.Draw(img)
 
-    # Draw stars background
+    # 🌟 stars background
     for _ in range(80):
         x = random.randint(0, WIDTH)
         y = random.randint(0, HEIGHT)
         draw.point((x, y), fill="white")
 
-    # Draw contributions as enemies
     enemies = []
+
+    # 🟩 draw contributions
     for i, week in enumerate(weeks):
         for j, day in enumerate(week):
-            if day["count"] > 0:
-                x = i * CELL + 100
-                y = j * CELL + (step * 2)
+            try:
+                count = 0
 
-                y = y % HEIGHT
+                if isinstance(day, dict):
+                    if "count" in day:
+                        count = day["count"]
+                    elif "contributionCount" in day:
+                        count = day["contributionCount"]
 
-                draw.rectangle([x, y, x+10, y+10], fill=(0, 255, 100))
-                enemies.append((x, y))
+                if count > 0:
+                    x = i * CELL + 100
+                    y = (j * CELL + step * 2) % HEIGHT
 
-    # Fire bullet every few frames
+                    draw.rectangle([x, y, x + 10, y + 10], fill=(0, 255, 100))
+                    enemies.append((x, y))
+
+            except:
+                pass
+
+    # 🔫 shoot bullets
     if step % 3 == 0:
         bullets.append([player_x, player_y])
 
-    # Draw bullets
     new_bullets = []
+
     for b in bullets:
         b[1] -= 8
-        draw.rectangle([b[0], b[1], b[0]+3, b[1]+8], fill="yellow")
+        draw.rectangle([b[0], b[1], b[0] + 3, b[1] + 8], fill="yellow")
 
-        # collision
         hit = False
+
         for ex, ey in enemies:
             if abs(b[0] - ex) < 10 and abs(b[1] - ey) < 10:
                 hit = True
-                draw.rectangle([ex, ey, ex+10, ey+10], fill="red")
+
+                # 💥 explosion effect
+                draw.ellipse([ex - 3, ey - 3, ex + 13, ey + 13], fill="red")
                 break
 
         if not hit and b[1] > 0:
@@ -77,7 +94,7 @@ for step in range(40):
 
     bullets = new_bullets
 
-    # Draw player (spaceship)
+    # 🚀 spaceship
     draw.polygon([
         (player_x, player_y),
         (player_x - 10, player_y + 15),
@@ -94,3 +111,5 @@ frames[0].save(
     duration=80,
     loop=0
 )
+
+print("GIF created successfully 🚀")
