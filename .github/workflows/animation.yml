@@ -2,7 +2,7 @@ name: Generate Animation
 
 on:
   schedule:
-    - cron: "0 0 * * *"  # runs daily
+    - cron: "0 0 * * *"   # runs daily
   workflow_dispatch:
 
 jobs:
@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
       - name: Setup Python
@@ -18,23 +18,26 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
           pip install pillow requests
 
-      - name: Generate GIF
+      - name: Run Animation Script
         run: python generate.py
 
-      - name: Commit & Push GIF
+      - name: Commit and Push GIF
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
 
-          # 🔥 FIX: always sync before push
+          # ✅ Stage ALL changes first
+          git add -A
+
+          # ✅ Commit safely (won’t fail if nothing changed)
+          git commit -m "update animation" || echo "No changes to commit"
+
+          # ✅ Pull latest changes safely
           git pull origin main --rebase
 
-          git add animation.gif
-          git commit -m "update gif" || echo "no changes"
-
-          # 🔥 SAFE PUSH
-          git push --force-with-lease origin main
+          # ✅ Push changes
+          git push origin main
