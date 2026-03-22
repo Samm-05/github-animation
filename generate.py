@@ -2,7 +2,7 @@ import requests
 from PIL import Image, ImageDraw
 import random
 
-USERNAME = "YOUR_USERNAME"
+USERNAME = "Samm-05"
 
 # -------- FETCH DATA --------
 def get_data():
