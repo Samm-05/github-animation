@@ -1,36 +1,40 @@
 name: Generate Animation
 
 on:
+  schedule:
+    - cron: "0 0 * * *"  # runs daily
   workflow_dispatch:
-
-permissions:
-  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
-      - name: Install libs
-        run: pip install pillow requests
+      - name: Install dependencies
+        run: |
+          pip install pillow requests
 
-      - name: Run script
+      - name: Generate GIF
         run: python generate.py
 
-      - name: Debug files
-        run: ls -l
-
-      - name: Commit GIF
+      - name: Commit & Push GIF
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add animation.gif || echo "no file"
+
+          # 🔥 FIX: always sync before push
+          git pull origin main --rebase
+
+          git add animation.gif
           git commit -m "update gif" || echo "no changes"
-          git push
+
+          # 🔥 SAFE PUSH
+          git push --force-with-lease origin main
