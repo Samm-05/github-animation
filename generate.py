@@ -4,6 +4,7 @@ import random
 
 USERNAME = "Samm-05"
 
+# -------- FETCH DATA --------
 def get_data():
     try:
         url = f"https://github-contributions-api.jogruber.de/v4/{USERNAME}"
@@ -15,25 +16,30 @@ def get_data():
 
 weeks = get_data()
 
+# -------- SETTINGS --------
 WIDTH = 900
 HEIGHT = 300
 CELL = 12
 
 frames = []
+
 player_x = WIDTH // 2
-player_y = HEIGHT - 30
+player_y = HEIGHT - 40
+
 bullets = []
 
-for step in range(40):
+# -------- ANIMATION --------
+for step in range(50):
     img = Image.new("RGB", (WIDTH, HEIGHT), (5, 10, 20))
     draw = ImageDraw.Draw(img)
 
-    # stars
-    for _ in range(80):
+    # 🌌 Stars background
+    for _ in range(100):
         draw.point((random.randint(0, WIDTH), random.randint(0, HEIGHT)), fill="white")
 
     enemies = []
 
+    # 🟩 Contributions (with fill boost)
     for i, week in enumerate(weeks):
         for j, day in enumerate(week):
             count = 0
@@ -41,29 +47,35 @@ for step in range(40):
             if isinstance(day, dict):
                 count = day.get("count", day.get("contributionCount", 0))
 
-            if count > 0:
+            if count > 0 or random.random() < 0.3:
                 x = i * CELL + 100
                 y = (j * CELL + step * 2) % HEIGHT
 
                 draw.rectangle([x, y, x + 10, y + 10], fill=(0, 255, 100))
                 enemies.append((x, y))
 
-    # bullets
-    if step % 3 == 0:
+    # 🔫 Fire bullets
+    if step % 2 == 0:
         bullets.append([player_x, player_y])
 
     new_bullets = []
 
     for b in bullets:
-        b[1] -= 8
-        draw.rectangle([b[0], b[1], b[0] + 3, b[1] + 8], fill="yellow")
+        b[1] -= 10
+
+        # bullet glow
+        draw.ellipse([b[0]-2, b[1], b[0]+4, b[1]+10], fill=(255, 255, 0))
 
         hit = False
 
         for ex, ey in enemies:
             if abs(b[0] - ex) < 10 and abs(b[1] - ey) < 10:
                 hit = True
-                draw.ellipse([ex - 3, ey - 3, ex + 13, ey + 13], fill="red")
+
+                # 💥 explosion rings
+                for r in range(3, 12, 3):
+                    draw.ellipse([ex-r, ey-r, ex+r, ey+r], outline="red")
+
                 break
 
         if not hit and b[1] > 0:
@@ -71,21 +83,58 @@ for step in range(40):
 
     bullets = new_bullets
 
-    # spaceship
+    # 🚀 ADVANCED SPACESHIP
+
+    # glow
+    for i in range(6, 0, -1):
+        draw.ellipse([
+            player_x - i*3,
+            player_y - i*2,
+            player_x + i*3,
+            player_y + i*2
+        ], outline=(0, 150, 255))
+
+    # main body
     draw.polygon([
-        (player_x, player_y),
-        (player_x - 10, player_y + 15),
-        (player_x + 10, player_y + 15)
+        (player_x, player_y - 12),
+        (player_x - 15, player_y + 15),
+        (player_x + 15, player_y + 15)
     ], fill=(0, 200, 255))
+
+    # cockpit
+    draw.ellipse([
+        player_x - 5, player_y - 5,
+        player_x + 5, player_y + 5
+    ], fill="white")
+
+    # wings
+    draw.polygon([
+        (player_x - 15, player_y + 15),
+        (player_x - 25, player_y + 25),
+        (player_x - 5, player_y + 20)
+    ], fill=(0, 120, 255))
+
+    draw.polygon([
+        (player_x + 15, player_y + 15),
+        (player_x + 25, player_y + 25),
+        (player_x + 5, player_y + 20)
+    ], fill=(0, 120, 255))
+
+    # engine flame
+    draw.ellipse([
+        player_x - 5, player_y + 15,
+        player_x + 5, player_y + 30
+    ], fill=(255, 120, 0))
 
     frames.append(img)
 
+# -------- SAVE GIF --------
 frames[0].save(
     "animation.gif",
     save_all=True,
     append_images=frames[1:],
-    duration=80,
+    duration=70,
     loop=0
 )
 
-print("GIF created successfully")
+print("🚀 Advanced Space Shooter GIF Created!")
